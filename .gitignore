@@ -1,0 +1,19 @@
+/target/
+.classpath
+.settings/org.eclipse.jdt.core.prefs
+.settings/org.eclipse.m2e.core.prefs
+.project
+/Cache/settings.dat
+/bin/
+*.iml
+*.class
+.gradle
+.idea
+build
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# The characters that are created while playing.
+data/saves/characters/

@@ -1,0 +1,96 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.reich.server'
+    compileSdk 35
+    buildToolsVersion '35.0.1'
+
+    defaultConfig {
+        applicationId 'com.reich.server'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '1.0.0'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    androidResources {
+        // The server data archive is already deflated, storing it avoids a
+        // pointless double compression pass at package time.
+        noCompress 'zip'
+    }
+
+    packaging {
+        resources {
+            excludes += [
+                    'META-INF/AL2.0',
+                    'META-INF/LGPL2.1',
+                    'META-INF/DEPENDENCIES',
+                    'META-INF/LICENSE*',
+                    'META-INF/NOTICE*',
+                    'META-INF/INDEX.LIST',
+                    'META-INF/*.kotlin_module',
+                    'META-INF/io.netty.versions.properties',
+                    'META-INF/io.netty.override.properties'
+            ]
+        }
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+}
+
+dependencies {
+    implementation project(':server')
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.12.0'
+}
+
+def generatedAssetsDir = layout.buildDirectory.dir('generated/serverData')
+
+// Packages the repository 'data' folder into a single 'server-data.zip' asset
+// that is extracted into the app's private storage on first launch.
+def packageServerData = tasks.register('packageServerData', Zip) {
+    group = 'build'
+    description = 'Packages the server data folder into a zip asset.'
+    from(rootProject.layout.projectDirectory.dir('data')) {
+        exclude 'saves/**'
+    }
+    // The sample characters are shipped separately, they are copied into the
+    // save directory on the first launch (without overwriting anything).
+    from(rootProject.layout.projectDirectory.dir('data/saves/characters')) {
+        into 'sample-saves'
+    }
+    archiveFileName = 'server-data.zip'
+    destinationDirectory = generatedAssetsDir
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+android.sourceSets.main.assets.srcDir(generatedAssetsDir)
+
+tasks.named('preBuild').configure {
+    dependsOn packageServerData
+}

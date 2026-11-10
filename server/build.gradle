@@ -1,0 +1,47 @@
+plugins {
+    id 'java-library'
+}
+
+group = 'com.elvarg'
+version = '1.0.0'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+dependencies {
+    // Guava: the "android" flavour is API level 21+ safe and free of the
+    // jdk specific classes that the "jre" flavour drags in (which do not
+    // exist on Android).
+    api 'com.google.guava:guava:31.1-android'
+    api 'com.google.code.gson:gson:2.11.0'
+
+    // Netty 4.1 is the branch that is supported on Android (NIO transport).
+    // Only the modules that are actually needed are used, the "netty-all"
+    // artifact pulls in the native epoll/kqueue transports which do not
+    // exist on Android.
+    api 'io.netty:netty-buffer:4.1.93.Final'
+    api 'io.netty:netty-common:4.1.93.Final'
+    api 'io.netty:netty-transport:4.1.93.Final'
+    api 'io.netty:netty-codec:4.1.93.Final'
+    api 'io.netty:netty-handler:4.1.93.Final'
+    api 'io.netty:netty-resolver:4.1.93.Final'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.compilerArgs.add('-Xlint:-options')
+}
+
+// Runs the server on the desktop JVM using the repository 'data' folder.
+tasks.register('runServer', JavaExec) {
+    group = 'application'
+    description = 'Runs the Elvarg/Reich 317 server on the desktop JVM.'
+    mainClass = 'com.elvarg.Server'
+    classpath = sourceSets.main.runtimeClasspath
+    workingDir = rootProject.projectDir
+    systemProperty 'reich.data.dir', System.getProperty('reich.data.dir', './data')
+    systemProperty 'reich.port', System.getProperty('reich.port', '43595')
+    args = ['0']
+}
